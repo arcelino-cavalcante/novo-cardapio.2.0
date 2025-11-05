@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Painel Administrativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#FFF8E1', 100: '#FFECB3', 200: '#FFE082', 300: '#FFD54F', 400: '#FFCA28', 500: '#FBBF24', 600: '#F59E0B', 700: '#D97706', 800: '#B45309', 900: '#92400e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif
+        }
+    </style>
+</head>
+
+<body class="bg-neutral-50 text-neutral-900">
+    <header class="bg-white border-b">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h1 class="text-xl md:text-2xl font-bold">Painel Administrativo</h1>
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="px-4 py-2 rounded-lg border hover:bg-neutral-100">Voltar ao Cardápio</a>
+                <button id="logoutBtn" class="px-4 py-2 rounded-lg border text-red-600 hover:bg-red-50 hidden">Sair</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="authScreen" class="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+        <div class="w-full max-w-sm bg-white border border-neutral-200 rounded-2xl shadow-xl p-6 space-y-4">
+            <div class="text-center space-y-1">
+                <h2 class="text-xl font-semibold">Área Restrita</h2>
+                <p class="text-sm text-neutral-500">Entre com seu email e senha cadastrados.</p>
+            </div>
+            <form id="authForm" class="space-y-3">
+                <div class="space-y-1">
+                    <label for="authEmail" class="text-sm font-medium text-neutral-700">Email</label>
+                    <input id="authEmail" type="email" autocomplete="email" required
+                        class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+                <div class="space-y-1">
+                    <label for="authPassword" class="text-sm font-medium text-neutral-700">Senha</label>
+                    <input id="authPassword" type="password" autocomplete="current-password" required
+                        class="w-full border border-neutral-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+                <button id="authSubmit" type="submit"
+                    class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-3 py-2 font-semibold transition-colors">Entrar</button>
+            </form>
+            <p id="authError" class="text-sm text-red-600 hidden"></p>
+        </div>
+    </div>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        <!-- Tabs -->
+        <div class="-mx-4 sm:mx-0 overflow-x-auto mb-4">
+            <div class="px-4 sm:px-0 flex gap-2 min-w-max whitespace-nowrap pb-1">
+                <button id="tabProdutos" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Produtos</button>
+                <button id="tabCategorias" class="px-4 py-2 rounded-lg bg-white border">Categorias</button>
+                <button id="tabMonteSeu" class="px-4 py-2 rounded-lg bg-white border">Monte Seu...</button>
+                <button id="tabOpcionais" class="px-4 py-2 rounded-lg bg-white border">Opcionais</button>
+                <button id="tabTaxas" class="px-4 py-2 rounded-lg bg-white border">Taxas</button>
+                <button id="tabInfo" class="px-4 py-2 rounded-lg bg-white border">Informações</button>
+            </div>
+        </div>
+
+        <!-- Produtos -->
+        <section id="viewProdutos" class="bg-white border rounded-xl overflow-hidden">
+            <div class="p-4 border-b grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="col-span-full">
+                    <label class="block text-sm">Nome do Produto</label>
+                    <input id="pName" class="w-full border rounded-lg px-3 py-2" placeholder="Ex.: Calabresa" />
+                </div>
+                <div class="col-span-full md:col-span-1">
+                    <label class="block text-sm">Categoria</label>
+                    <select id="pCategory" class="w-full border rounded-lg px-3 py-2"></select>
+                </div>
+                <div class="col-span-full md:col-span-1">
+                    <label class="block text-sm">Grupo de opcionais</label>
+                    <select id="pOptionGroup" class="w-full border rounded-lg px-3 py-2"></select>
+                </div>
+                <div class="col-span-full md:col-span-1">
+                    <label class="block text-sm">URL da Imagem</label>
+                    <input id="pImage" class="w-full border rounded-lg px-3 py-2" placeholder="https://..." />
+                </div>
+                <div id="boxPricesSimple" class="col-span-full md:col-span-1">
+                    <label class="block text-sm">Preço (único)</label>
+                    <input id="pPrice" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2"
+                        placeholder="0,00" />
+                </div>
+                <div id="boxPricesSimpleOffer" class="col-span-full md:col-span-1">
+                    <label class="block text-sm">Preço na Promoção</label>
+                    <input id="pOfferPrice" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2"
+                        placeholder="0,00" />
+                </div>
+                <div id="boxPricesSizes" class="grid grid-cols-3 gap-2 hidden col-span-full">
+                    <div>
+                        <label class="block text-sm">Preço P</label>
+                        <input id="pPriceP" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm">Preço M</label>
+                        <input id="pPriceM" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm">Preço G</label>
+                        <input id="pPriceG" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                </div>
+                <div id="boxPricesSizesOffer" class="grid grid-cols-3 gap-2 hidden col-span-full">
+                    <div>
+                        <label class="block text-sm">Oferta P</label>
+                        <input id="pOfferPriceP" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm">Oferta M</label>
+                        <input id="pOfferPriceM" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                    <div>
+                        <label class="block text-sm">Oferta G</label>
+                        <input id="pOfferPriceG" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 col-span-full md:col-span-1">
+                    <input id="pAvailable" type="checkbox" class="scale-125">
+                    <label for="pAvailable">Disponível</label>
+                </div>
+                <div class="col-span-full flex justify-end">
+                    <button id="btnSaveProduct" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Adicionar</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-neutral-100">
+                        <tr>
+                            <th class="text-left p-3">Produto</th>
+                            <th class="text-left p-3">Categoria</th>
+                            <th class="text-left p-3">Imagem</th>
+                            <th class="text-left p-3">Preço</th>
+                            <th class="text-left p-3">Esgotado</th>
+                            <th class="text-right p-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gridProducts"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Categorias -->
+        <section id="viewCategorias" class="bg-white border rounded-xl overflow-hidden hidden">
+            <div class="p-4 border-b flex flex-col md:flex-row md:items-end gap-3">
+                <div class="flex-1">
+                    <label class="block text-sm">Nome da Categoria</label>
+                    <input id="cName" class="w-full border rounded-lg px-3 py-2" placeholder="Ex.: Pizzas" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <input id="cUseSizes" type="checkbox" class="scale-125">
+                    <label for="cUseSizes">Usar tamanhos (P/M/G)</label>
+                </div>
+                <div id="cAllowHalfWrapper" class="flex items-center gap-2 hidden">
+                    <input id="cAllowHalf" type="checkbox" class="scale-125">
+                    <label for="cAllowHalf">Permitir meia a meia</label>
+                </div>
+                <button id="btnSaveCategory" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Adicionar</button>
+            </div>
+
+            <div class="p-4 border-b">
+                <label class="block text-sm">Grupo de opcionais</label>
+                <select id="cOptionGroup" class="w-full border rounded-lg px-3 py-2"></select>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-neutral-100">
+                        <tr>
+                            <th class="text-left p-3">Categoria</th>
+                            <th class="text-left p-3">Usa tamanhos</th>
+                            <th class="text-left p-3">Opcionais</th>
+                            <th class="text-left p-3">Meia a meia</th>
+                            <th class="text-right p-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gridCategories"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Monte Seu... -->
+        <section id="viewMonteSeu" class="bg-white border rounded-xl overflow-hidden hidden">
+            <div class="p-4 border-b space-y-4">
+                <div>
+                    <label class="block text-sm">Nome da Categoria (Ex: Monte Seu Açaí)</label>
+                    <input id="msName" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div>
+                    <label class="block text-sm">Tipo de Montagem</label>
+                    <select id="msType" class="w-full border rounded-lg px-3 py-2">
+                        <option value="base">Preço Base (Hambúrguer, Pastel)</option>
+                        <option value="sizes">Tamanhos (Açaí)</option>
+                    </select>
+                </div>
+
+                <div id="msBoxBasePrice">
+                    <label class="block text-sm">Preço Base (Ex: Pão e Carne)</label>
+                    <input id="msBasePrice" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+
+                <div id="msBoxSizes" class="hidden space-y-2">
+                    <label class="block text-sm">Opções de Tamanho</label>
+                    <div id="msSizesContainer"></div>
+                    <button id="msBtnAddSize" class="px-3 py-1 text-sm rounded-lg border hover:bg-neutral-100">+ Adicionar Tamanho</button>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm">Opcionais / Adicionais</label>
+                    <div id="msAddonsContainer"></div>
+                    <button id="msBtnAddAddon" class="px-3 py-1 text-sm rounded-lg border hover:bg-neutral-100">+ Adicionar Opcional</button>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button id="btnSaveMonteSeu" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Adicionar</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-neutral-100">
+                        <tr>
+                            <th class="text-left p-3">Nome</th>
+                            <th class="text-left p-3">Tipo</th>
+                            <th class="text-right p-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gridMonteSeu"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Opcionais -->
+        <section id="viewOpcionais" class="bg-white border rounded-xl overflow-hidden hidden">
+            <div class="p-4 border-b space-y-4">
+                <div>
+                    <label class="block text-sm">Nome do Grupo</label>
+                    <input id="ogName" class="w-full border rounded-lg px-3 py-2" placeholder="Ex.: Bordas" />
+                </div>
+                <div>
+                    <label class="block text-sm">Rótulo exibido no cardápio</label>
+                    <input id="ogLabel" class="w-full border rounded-lg px-3 py-2" placeholder="Ex.: Escolha a borda" />
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm">Opções</label>
+                    <div id="ogOptionsContainer" class="space-y-2"></div>
+                    <button id="ogBtnAddOption" class="px-3 py-1 text-sm rounded-lg border hover:bg-neutral-100">+ Adicionar opção</button>
+                </div>
+                <div class="flex justify-end">
+                    <button id="btnSaveOptionGroup" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Adicionar</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-neutral-100">
+                        <tr>
+                            <th class="text-left p-3">Grupo</th>
+                            <th class="text-left p-3">Rótulo</th>
+                            <th class="text-left p-3">Opções</th>
+                            <th class="text-right p-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gridOptionGroups"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Taxas -->
+        <section id="viewTaxas" class="bg-white border rounded-xl overflow-hidden hidden">
+            <div class="p-4 border-b grid md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm">Taxa Base (Vila Neves)</label>
+                    <input id="tBase" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div class="flex items-end">
+                    <button id="btnSaveBase" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Salvar Taxa
+                        Base</button>
+                </div>
+            </div>
+
+            <div class="p-4 border-b grid md:grid-cols-3 gap-3">
+                <div class="md:col-span-2">
+                    <label class="block text-sm">Nome do Sítio</label>
+                    <input id="sName" class="w-full border rounded-lg px-3 py-2" placeholder="Ex.: Sítio Papa Terra" />
+                </div>
+                <div>
+                    <label class="block text-sm">Taxa</label>
+                    <input id="sFee" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2" />
+                </div>
+                <div class="md:col-span-3">
+                    <button id="btnSaveSitio" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Adicionar
+                        Sítio</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-neutral-100">
+                        <tr>
+                            <th class="text-left p-3">Sítio</th>
+                            <th class="text-left p-3">Taxa</th>
+                            <th class="text-right p-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gridSitios"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Informações -->
+        <section id="viewInfo" class="bg-white border rounded-xl overflow-hidden hidden">
+            <div class="p-4 border-b space-y-4">
+                <div>
+                    <label class="block text-sm">Descrição ou Horário</label>
+                    <textarea id="infoDescription" class="w-full border rounded-lg px-3 py-2" rows="3" placeholder="Aberto hoje: 18h–23h"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm">Endereço</label>
+                    <input id="infoAddress" class="w-full border rounded-lg px-3 py-2" placeholder="Rua José Bezerra Lins, Garanhuns - PE" />
+                </div>
+                <div>
+                    <label class="block text-sm">WhatsApp</label>
+                    <input id="infoWhatsapp" class="w-full border rounded-lg px-3 py-2" placeholder="(87) 98129-0926" />
+                </div>
+                <div>
+                    <label class="block text-sm">Instagram</label>
+                    <input id="infoInstagram" class="w-full border rounded-lg px-3 py-2" placeholder="@lamundodossaboresguns" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <input id="infoOpen" type="checkbox" class="scale-125" />
+                    <label for="infoOpen">Estamos abertos</label>
+                </div>
+                <div class="flex justify-end">
+                    <button id="btnSaveInfo" class="px-4 py-2 rounded-lg bg-brand-600 text-white">Salvar Informações</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: 'AIzaSyACY1MiDHY1VIoxElZPqHhheIlX9Uc8MPU',
+            authDomain: 'cardapio-la-neves.firebaseapp.com',
+            projectId: 'cardapio-la-neves',
+            storageBucket: 'cardapio-la-neves.firebasestorage.app',
+            messagingSenderId: '998136003309',
+            appId: '1:998136003309:web:1f20fb90c7c177c8e1aae4'
+        };
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const firestore = getFirestore(firebaseApp);
+        const auth = getAuth(firebaseApp);
+        const DATA_DOC = doc(firestore, 'cardapio', 'conteudo');
+
+        const DEFAULT_DB = {
+            categories: [],
+            products: [],
+            fees: { base: 0, sitios: [] },
+            monteSeu: [],
+            optionGroups: [],
+            info: {
+                description: 'Aberto hoje: 18h–23h',
+                address: 'Rua José Bezerra Lins, Garanhuns - PE',
+                whatsapp: '(87) 98129-0926',
+                instagram: '@lamundodossaboresguns',
+                open: true
+            },
+            sizeLabels: { p: 'Pequena', m: 'Média', g: 'Grande' }
+        };
+
+        function cloneDefault() {
+            return JSON.parse(JSON.stringify(DEFAULT_DB));
+        }
+
+        function normalizeDB(raw = {}) {
+            const data = cloneDefault();
+            if (Array.isArray(raw.categories)) data.categories = raw.categories;
+            if (Array.isArray(raw.products)) data.products = raw.products;
+            if (raw.fees && typeof raw.fees === 'object') {
+                data.fees.base = Number(raw.fees.base || 0);
+                data.fees.sitios = Array.isArray(raw.fees.sitios) ? raw.fees.sitios : [];
+            }
+            if (Array.isArray(raw.monteSeu)) data.monteSeu = raw.monteSeu;
+            if (Array.isArray(raw.optionGroups)) data.optionGroups = raw.optionGroups;
+            if (raw.info && typeof raw.info === 'object') data.info = { ...DEFAULT_DB.info, ...raw.info };
+            if (raw.sizeLabels && typeof raw.sizeLabels === 'object') data.sizeLabels = { ...DEFAULT_DB.sizeLabels, ...raw.sizeLabels };
+            return JSON.parse(JSON.stringify(data));
+        }
+
+        async function loadDB() {
+            const snapshot = await getDoc(DATA_DOC);
+            if (!snapshot.exists()) {
+                const seed = cloneDefault();
+                await setDoc(DATA_DOC, seed);
+                return seed;
+            }
+            return normalizeDB(snapshot.data());
+        }
+
+        async function saveDB(db) {
+            const plain = JSON.parse(JSON.stringify(db));
+            await setDoc(DATA_DOC, plain);
+            DB = plain;
+        }
+
+        async function persistDB() {
+            if (!auth.currentUser) {
+                alert('Sessão expirada. Faça login novamente.');
+                throw new Error('Usuário não autenticado');
+            }
+            try {
+                await saveDB(DB);
+            } catch (error) {
+                console.error('Erro ao salvar dados:', error);
+                alert('Não foi possível salvar os dados. Tente novamente.');
+                throw error;
+            }
+        }
+
+        function money(value = 0) {
+            return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function generateId(prefix) {
+            return `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+        }
+
+        function escapeAttr(value) {
+            return (value ?? '').toString().replace(/"/g, '&quot;');
+        }
+
+        function sanitizeSizePrices(values) {
+            const result = {};
+            Object.entries(values).forEach(([key, rawValue]) => {
+                const numeric = Number(rawValue || 0);
+                if (numeric > 0) result[key] = numeric;
+            });
+            return Object.keys(result).length ? result : undefined;
+        }
+
+        let DB = cloneDefault();
+        let editingProductId = null;
+        let editingCategoryId = null;
+        let editingSitioId = null;
+        let editingMonteSeuId = null;
+        let editingOptionGroupId = null;
+        let unsubscribeSnapshot = null;
+        let hasInitializedUI = false;
+
+        // Tabs
+        const tabProdutos = document.getElementById('tabProdutos');
+        const tabCategorias = document.getElementById('tabCategorias');
+        const tabMonteSeu = document.getElementById('tabMonteSeu');
+        const tabOpcionais = document.getElementById('tabOpcionais');
+        const tabInfo = document.getElementById('tabInfo');
+        const tabTaxas = document.getElementById('tabTaxas');
+        const viewProdutos = document.getElementById('viewProdutos');
+        const viewCategorias = document.getElementById('viewCategorias');
+        const viewMonteSeu = document.getElementById('viewMonteSeu');
+        const viewOpcionais = document.getElementById('viewOpcionais');
+        const viewInfo = document.getElementById('viewInfo');
+        const viewTaxas = document.getElementById('viewTaxas');
+
+        const authScreen = document.getElementById('authScreen');
+        const authForm = document.getElementById('authForm');
+        const authEmail = document.getElementById('authEmail');
+        const authPassword = document.getElementById('authPassword');
+        const authSubmit = document.getElementById('authSubmit');
+        const authError = document.getElementById('authError');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        function switchTab(target) {
+            [viewProdutos, viewCategorias, viewMonteSeu, viewOpcionais, viewTaxas, viewInfo].forEach(v => v.classList.add('hidden'));
+            [tabProdutos, tabCategorias, tabMonteSeu, tabOpcionais, tabTaxas, tabInfo].forEach(t => t.className = 'px-4 py-2 rounded-lg bg-white border');
+
+            let view;
+            let tab;
+            if (target === 'produtos') { view = viewProdutos; tab = tabProdutos; }
+            else if (target === 'categorias') { view = viewCategorias; tab = tabCategorias; }
+            else if (target === 'monteSeu') { view = viewMonteSeu; tab = tabMonteSeu; }
+            else if (target === 'opcionais') { view = viewOpcionais; tab = tabOpcionais; }
+            else if (target === 'info') { view = viewInfo; tab = tabInfo; }
+            else { view = viewTaxas; tab = tabTaxas; }
+
+            view.classList.remove('hidden');
+            tab.className = 'px-4 py-2 rounded-lg bg-brand-600 text-white';
+        }
+
+        tabProdutos.addEventListener('click', () => switchTab('produtos'));
+        tabCategorias.addEventListener('click', () => switchTab('categorias'));
+        tabMonteSeu.addEventListener('click', () => switchTab('monteSeu'));
+        tabOpcionais.addEventListener('click', () => switchTab('opcionais'));
+        tabInfo.addEventListener('click', () => switchTab('info'));
+        tabTaxas.addEventListener('click', () => switchTab('taxas'));
+
+        // Produtos
+        const pName = document.getElementById('pName');
+        const pCategory = document.getElementById('pCategory');
+        const pOptionGroup = document.getElementById('pOptionGroup');
+        const pImage = document.getElementById('pImage');
+        const pPrice = document.getElementById('pPrice');
+        const pOfferPrice = document.getElementById('pOfferPrice');
+        const pPriceP = document.getElementById('pPriceP');
+        const pPriceM = document.getElementById('pPriceM');
+        const pPriceG = document.getElementById('pPriceG');
+        const pOfferPriceP = document.getElementById('pOfferPriceP');
+        const pOfferPriceM = document.getElementById('pOfferPriceM');
+        const pOfferPriceG = document.getElementById('pOfferPriceG');
+        const pAvailable = document.getElementById('pAvailable');
+        const btnSaveProduct = document.getElementById('btnSaveProduct');
+        const gridProducts = document.getElementById('gridProducts');
+        const boxPricesSimple = document.getElementById('boxPricesSimple');
+        const boxPricesSimpleOffer = document.getElementById('boxPricesSimpleOffer');
+        const boxPricesSizes = document.getElementById('boxPricesSizes');
+        const boxPricesSizesOffer = document.getElementById('boxPricesSizesOffer');
+
+        function populateCategorySelect() {
+            const current = pCategory.value;
+            pCategory.innerHTML = '<option value="">Selecione...</option>';
+            DB.categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                pCategory.appendChild(option);
+            });
+            if (current && DB.categories.some(cat => cat.id === current)) {
+                pCategory.value = current;
+            }
+            handleCategoryChange();
+        }
+
+        function handleCategoryChange() {
+            const category = DB.categories.find(cat => cat.id === pCategory.value);
+            const useSizes = category ? !!category.useSizes : false;
+            boxPricesSimple.classList.toggle('hidden', useSizes);
+            boxPricesSimpleOffer.classList.toggle('hidden', useSizes);
+            boxPricesSizes.classList.toggle('hidden', !useSizes);
+            boxPricesSizesOffer.classList.toggle('hidden', !useSizes);
+
+            if (pOptionGroup) {
+                const product = editingProductId ? DB.products.find(p => p.id === editingProductId) : null;
+                const preferred = product?.optionGroupId ?? (category?.optionGroupId ?? '');
+                const availableValues = Array.from(pOptionGroup.options).map(opt => opt.value);
+                pOptionGroup.value = availableValues.includes(preferred) ? preferred : '';
+            }
+        }
+
+        pCategory.addEventListener('change', handleCategoryChange);
+
+        function clearProductForm() {
+            editingProductId = null;
+            pName.value = '';
+            pCategory.value = '';
+            if (pOptionGroup) pOptionGroup.value = '';
+            pImage.value = '';
+            pPrice.value = '';
+            pOfferPrice.value = '';
+            pPriceP.value = '';
+            pPriceM.value = '';
+            pPriceG.value = '';
+            pOfferPriceP.value = '';
+            pOfferPriceM.value = '';
+            pOfferPriceG.value = '';
+            pAvailable.checked = true;
+            btnSaveProduct.textContent = 'Adicionar';
+            handleCategoryChange();
+        }
+
+        function formatProductPrice(product, category) {
+            if (category && category.useSizes) {
+                const labels = { p: 'P', m: 'M', g: 'G' };
+                const parts = [];
+                Object.entries(labels).forEach(([key, label]) => {
+                    const normal = product.prices ? Number(product.prices[key] || 0) : 0;
+                    if (normal <= 0) return;
+                    const offer = product.offerPrices ? Number(product.offerPrices[key] || 0) : 0;
+                    if (offer > 0 && offer < normal) {
+                        parts.push(`${label}: <span class="text-red-600">${money(offer)}</span> <del class="text-neutral-500">${money(normal)}</del>`);
+                    } else {
+                        parts.push(`${label}: ${money(normal)}`);
+                    }
+                });
+                return parts.length ? parts.join('<br>') : '-';
+            }
+
+            const normalPrice = Number(product.price || 0);
+            const offerPriceValue = Number(product.offerPrice || 0);
+            if (offerPriceValue > 0 && offerPriceValue < normalPrice) {
+                return `<span class="text-red-600">${money(offerPriceValue)}</span> <del class="text-neutral-500">${money(normalPrice)}</del>`;
+            }
+            return normalPrice > 0 ? money(normalPrice) : '-';
+        }
+
+        async function saveProduct(event) {
+            event.preventDefault();
+            const name = pName.value.trim();
+            const categoryId = pCategory.value;
+            if (!name) {
+                alert('Informe o nome do produto.');
+                return;
+            }
+            if (!categoryId) {
+                alert('Selecione a categoria.');
+                return;
+            }
+            const category = DB.categories.find(cat => cat.id === categoryId);
+            if (!category) {
+                alert('Categoria inválida.');
+                return;
+            }
+
+            const payload = {
+                id: editingProductId || generateId('prod'),
+                name,
+                categoryId,
+                imageUrl: pImage.value.trim(),
+                available: pAvailable.checked,
+                optionGroupId: pOptionGroup.value || null
+            };
+
+            if (category.useSizes) {
+                const prices = sanitizeSizePrices({
+                    p: pPriceP.value,
+                    m: pPriceM.value,
+                    g: pPriceG.value
+                });
+                const offerPrices = sanitizeSizePrices({
+                    p: pOfferPriceP.value,
+                    m: pOfferPriceM.value,
+                    g: pOfferPriceG.value
+                });
+                if (!prices) {
+                    alert('Informe ao menos um preço de tamanho.');
+                    return;
+                }
+                payload.prices = prices;
+                payload.offerPrices = offerPrices;
+                payload.price = undefined;
+                payload.offerPrice = undefined;
+            } else {
+                const price = Number(pPrice.value || 0);
+                if (price <= 0) {
+                    alert('Informe o preço do produto.');
+                    return;
+                }
+                const offerPrice = Number(pOfferPrice.value || 0);
+                payload.price = price;
+                payload.offerPrice = offerPrice > 0 && offerPrice < price ? offerPrice : undefined;
+                payload.prices = undefined;
+                payload.offerPrices = undefined;
+            }
+
+            try {
+                if (editingProductId) {
+                    const index = DB.products.findIndex(product => product.id === editingProductId);
+                    if (index > -1) {
+                        DB.products[index] = { ...DB.products[index], ...payload };
+                    }
+                } else {
+                    DB.products.push(payload);
+                }
+
+                await persistDB();
+                renderProducts();
+                clearProductForm();
+            } catch (error) {
+                // persistDB already exibiu alerta
+            }
+        }
+
+        btnSaveProduct.addEventListener('click', saveProduct);
+
+        function editProduct(id) {
+            const product = DB.products.find(p => p.id === id);
+            if (!product) return;
+
+            editingProductId = id;
+            pName.value = product.name;
+            pCategory.value = product.categoryId;
+            pImage.value = product.imageUrl || '';
+            pAvailable.checked = product.available !== false;
+            handleCategoryChange();
+
+            if (pOptionGroup) {
+                const values = Array.from(pOptionGroup.options).map(opt => opt.value);
+                const desired = product.optionGroupId || '';
+                pOptionGroup.value = values.includes(desired) ? desired : '';
+            }
+
+            const category = DB.categories.find(cat => cat.id === product.categoryId);
+            if (category && category.useSizes) {
+                pPriceP.value = product.prices?.p ?? '';
+                pPriceM.value = product.prices?.m ?? '';
+                pPriceG.value = product.prices?.g ?? '';
+                pOfferPriceP.value = product.offerPrices?.p ?? '';
+                pOfferPriceM.value = product.offerPrices?.m ?? '';
+                pOfferPriceG.value = product.offerPrices?.g ?? '';
+                pPrice.value = '';
+                pOfferPrice.value = '';
+            } else {
+                pPrice.value = product.price ?? '';
+                pOfferPrice.value = product.offerPrice ?? '';
+                pPriceP.value = '';
+                pPriceM.value = '';
+                pPriceG.value = '';
+                pOfferPriceP.value = '';
+                pOfferPriceM.value = '';
+                pOfferPriceG.value = '';
+            }
+
+            btnSaveProduct.textContent = 'Salvar alterações';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteProduct(id) {
+            const product = DB.products.find(p => p.id === id);
+            if (!product) return;
+            if (!confirm('Excluir este produto?')) return;
+            DB.products = DB.products.filter(p => p.id !== id);
+            if (editingProductId === id) {
+                clearProductForm();
+            }
+            try {
+                await persistDB();
+                renderProducts();
+            } catch (error) {
+                // erro já tratado
+            }
+        }
+
+        function renderProducts() {
+            gridProducts.innerHTML = '';
+            DB.products.forEach(product => {
+                const category = DB.categories.find(cat => cat.id === product.categoryId);
+                const tr = document.createElement('tr');
+                tr.className = 'border-t';
+                tr.innerHTML = `
+                    <td class="p-3">${product.name}</td>
+                    <td class="p-3">${category ? category.name : '-'}</td>
+                    <td class="p-3">${product.imageUrl ? `<a href="${escapeAttr(product.imageUrl)}" class="text-brand-600 underline" target="_blank">Abrir</a>` : '-'}</td>
+                    <td class="p-3">${formatProductPrice(product, category)}</td>
+                    <td class="p-3">${product.available === false ? 'Sim' : 'Não'}</td>
+                    <td class="p-3 text-right space-x-2">
+                        <button class="px-3 py-1 rounded-lg border hover:bg-neutral-100" data-edit="${product.id}">Editar</button>
+                        <button class="px-3 py-1 rounded-lg border hover:bg-red-100 text-red-600" data-delete="${product.id}">Excluir</button>
+                    </td>
+                `;
+                gridProducts.appendChild(tr);
+            });
+
+            gridProducts.querySelectorAll('[data-edit]').forEach(btn => {
+                btn.addEventListener('click', () => editProduct(btn.getAttribute('data-edit')));
+            });
+            gridProducts.querySelectorAll('[data-delete]').forEach(btn => {
+                btn.addEventListener('click', () => deleteProduct(btn.getAttribute('data-delete')));
+            });
+        }
+
+        // Categorias
+        const cName = document.getElementById('cName');
+        const cUseSizes = document.getElementById('cUseSizes');
+        const cAllowHalfWrapper = document.getElementById('cAllowHalfWrapper');
+        const cAllowHalf = document.getElementById('cAllowHalf');
+        const cOptionGroup = document.getElementById('cOptionGroup');
+        const btnSaveCategory = document.getElementById('btnSaveCategory');
+        const gridCategories = document.getElementById('gridCategories');
+
+        function handleCategorySizeToggle() {
+            const usesSizes = cUseSizes.checked;
+            cAllowHalfWrapper.classList.toggle('hidden', !usesSizes);
+            if (!usesSizes) {
+                cAllowHalf.checked = false;
+            }
+        }
+
+        cUseSizes.addEventListener('change', handleCategorySizeToggle);
+
+        function clearCategoryForm() {
+            editingCategoryId = null;
+            cName.value = '';
+            cUseSizes.checked = false;
+            cAllowHalf.checked = false;
+            cOptionGroup.value = '';
+            btnSaveCategory.textContent = 'Adicionar';
+            handleCategorySizeToggle();
+        }
+
+        async function saveCategory(event) {
+            event.preventDefault();
+            const name = cName.value.trim();
+            if (!name) {
+                alert('Informe o nome da categoria.');
+                return;
+            }
+            const useSizes = cUseSizes.checked;
+            const payload = {
+                id: editingCategoryId || generateId('cat'),
+                name,
+                useSizes,
+                optionGroupId: cOptionGroup.value || null,
+                allowHalf: useSizes ? cAllowHalf.checked : false
+            };
+
+            try {
+                if (editingCategoryId) {
+                    const index = DB.categories.findIndex(cat => cat.id === editingCategoryId);
+                    if (index > -1) {
+                        DB.categories[index] = { ...DB.categories[index], ...payload };
+                    }
+                } else {
+                    DB.categories.push(payload);
+                }
+
+                await persistDB();
+                renderCategories();
+                populateOptionGroupSelects();
+                populateCategorySelect();
+                renderProducts();
+                clearCategoryForm();
+            } catch (error) {
+                // persistDB já mostra alerta
+            }
+        }
+
+        btnSaveCategory.addEventListener('click', saveCategory);
+
+        function editCategory(id) {
+            const category = DB.categories.find(cat => cat.id === id);
+            if (!category) return;
+            editingCategoryId = id;
+            cName.value = category.name;
+            cUseSizes.checked = !!category.useSizes;
+            cOptionGroup.value = category.optionGroupId || '';
+            cAllowHalf.checked = !!category.allowHalf;
+            handleCategorySizeToggle();
+            btnSaveCategory.textContent = 'Salvar alterações';
+            switchTab('categorias');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteCategory(id) {
+            const category = DB.categories.find(cat => cat.id === id);
+            if (!category) return;
+            let confirmationMessage = 'Excluir esta categoria?';
+            const hasProducts = DB.products.some(product => product.categoryId === id);
+            if (hasProducts) {
+                confirmationMessage = 'Esta categoria possui produtos cadastrados. Excluir categoria e remover os produtos relacionados?';
+            }
+            if (!confirm(confirmationMessage)) return;
+            DB.categories = DB.categories.filter(cat => cat.id !== id);
+            if (hasProducts) {
+                DB.products = DB.products.filter(product => product.categoryId !== id);
+            }
+            if (editingCategoryId === id) {
+                clearCategoryForm();
+            }
+            try {
+                await persistDB();
+                renderCategories();
+                populateOptionGroupSelects();
+                populateCategorySelect();
+                renderProducts();
+            } catch (error) {
+                // erro já informado
+            }
+        }
+
+        function renderCategories() {
+            gridCategories.innerHTML = '';
+            DB.categories.forEach(cat => {
+                const optionGroup = DB.optionGroups.find(group => group.id === cat.optionGroupId);
+                const tr = document.createElement('tr');
+                tr.className = 'border-t';
+                tr.innerHTML = `
+                    <td class="p-3">${cat.name}</td>
+                    <td class="p-3">${cat.useSizes ? 'Sim' : 'Não'}</td>
+                    <td class="p-3">${optionGroup ? optionGroup.name : '-'}</td>
+                    <td class="p-3">${cat.useSizes && cat.allowHalf ? 'Sim' : 'Não'}</td>
+                    <td class="p-3 text-right space-x-2">
+                        <button class="px-3 py-1 rounded-lg border hover:bg-neutral-100" data-edit-cat="${cat.id}">Editar</button>
+                        <button class="px-3 py-1 rounded-lg border hover:bg-red-100 text-red-600" data-del-cat="${cat.id}">Excluir</button>
+                    </td>
+                `;
+                gridCategories.appendChild(tr);
+            });
+
+            gridCategories.querySelectorAll('[data-edit-cat]').forEach(btn => {
+                btn.addEventListener('click', () => editCategory(btn.getAttribute('data-edit-cat')));
+            });
+            gridCategories.querySelectorAll('[data-del-cat]').forEach(btn => {
+                btn.addEventListener('click', () => deleteCategory(btn.getAttribute('data-del-cat')));
+            });
+        }
+
+        // Taxas
+        const tBase = document.getElementById('tBase');
+        const btnSaveBase = document.getElementById('btnSaveBase');
+        const sName = document.getElementById('sName');
+        const sFee = document.getElementById('sFee');
+        const btnSaveSitio = document.getElementById('btnSaveSitio');
+        const gridSitios = document.getElementById('gridSitios');
+
+        function renderBaseFee() {
+            tBase.value = DB.fees.base ?? 0;
+        }
+
+        btnSaveBase.addEventListener('click', async event => {
+            event.preventDefault();
+            DB.fees.base = Number(tBase.value || 0);
+            try {
+                await persistDB();
+                alert('Taxa base atualizada!');
+            } catch (error) {
+                // alerta já apresentado em persistDB
+            }
+        });
+
+        function clearSitioForm() {
+            editingSitioId = null;
+            sName.value = '';
+            sFee.value = '';
+            btnSaveSitio.textContent = 'Adicionar Sítio';
+        }
+
+        async function saveSitio(event) {
+            event.preventDefault();
+            const name = sName.value.trim();
+            const fee = Number(sFee.value || 0);
+            if (!name) {
+                alert('Informe o nome do sítio.');
+                return;
+            }
+            if (fee <= 0) {
+                alert('Informe a taxa do sítio.');
+                return;
+            }
+
+            try {
+                if (editingSitioId) {
+                    const index = DB.fees.sitios.findIndex(site => site.id === editingSitioId);
+                    if (index > -1) {
+                        DB.fees.sitios[index] = { ...DB.fees.sitios[index], name, fee };
+                    }
+                } else {
+                    DB.fees.sitios.push({ id: generateId('sitio'), name, fee });
+                }
+
+                await persistDB();
+                renderSitios();
+                clearSitioForm();
+            } catch (error) {
+                // erro apresentado em persistDB
+            }
+        }
+
+        btnSaveSitio.addEventListener('click', saveSitio);
+
+        function editSitio(id) {
+            const site = DB.fees.sitios.find(s => s.id === id);
+            if (!site) return;
+            editingSitioId = id;
+            sName.value = site.name;
+            sFee.value = site.fee;
+            btnSaveSitio.textContent = 'Salvar alterações';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteSitio(id) {
+            if (!confirm('Excluir este sítio?')) return;
+            DB.fees.sitios = DB.fees.sitios.filter(site => site.id !== id);
+            if (editingSitioId === id) {
+                clearSitioForm();
+            }
+            try {
+                await persistDB();
+                renderSitios();
+            } catch (error) {
+                // erro já tratado
+            }
+        }
+
+        function renderSitios() {
+            gridSitios.innerHTML = '';
+            DB.fees.sitios.forEach(site => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-t';
+                tr.innerHTML = `
+                    <td class="p-3">${site.name}</td>
+                    <td class="p-3">${money(site.fee)}</td>
+                    <td class="p-3 text-right space-x-2">
+                        <button class="px-3 py-1 rounded-lg border hover:bg-neutral-100" data-edit-site="${site.id}">Editar</button>
+                        <button class="px-3 py-1 rounded-lg border hover:bg-red-100 text-red-600" data-del-site="${site.id}">Excluir</button>
+                    </td>
+                `;
+                gridSitios.appendChild(tr);
+            });
+
+            gridSitios.querySelectorAll('[data-edit-site]').forEach(btn => {
+                btn.addEventListener('click', () => editSitio(btn.getAttribute('data-edit-site')));
+            });
+            gridSitios.querySelectorAll('[data-del-site]').forEach(btn => {
+                btn.addEventListener('click', () => deleteSitio(btn.getAttribute('data-del-site')));
+            });
+        }
+
+        // Monte Seu
+        const msName = document.getElementById('msName');
+        const msType = document.getElementById('msType');
+        const msBoxBasePrice = document.getElementById('msBoxBasePrice');
+        const msBasePrice = document.getElementById('msBasePrice');
+        const msBoxSizes = document.getElementById('msBoxSizes');
+        const msSizesContainer = document.getElementById('msSizesContainer');
+        const msBtnAddSize = document.getElementById('msBtnAddSize');
+        const msAddonsContainer = document.getElementById('msAddonsContainer');
+        const msBtnAddAddon = document.getElementById('msBtnAddAddon');
+        const btnSaveMonteSeu = document.getElementById('btnSaveMonteSeu');
+        const gridMonteSeu = document.getElementById('gridMonteSeu');
+
+        const ogName = document.getElementById('ogName');
+        const ogLabel = document.getElementById('ogLabel');
+        const ogOptionsContainer = document.getElementById('ogOptionsContainer');
+        const ogBtnAddOption = document.getElementById('ogBtnAddOption');
+        const btnSaveOptionGroup = document.getElementById('btnSaveOptionGroup');
+        const gridOptionGroups = document.getElementById('gridOptionGroups');
+        const infoDescription = document.getElementById('infoDescription');
+        const infoAddress = document.getElementById('infoAddress');
+        const infoWhatsapp = document.getElementById('infoWhatsapp');
+        const infoInstagram = document.getElementById('infoInstagram');
+        const infoOpen = document.getElementById('infoOpen');
+        const btnSaveInfo = document.getElementById('btnSaveInfo');
+
+        msType.addEventListener('change', () => {
+            const isBase = msType.value === 'base';
+            msBoxBasePrice.classList.toggle('hidden', !isBase);
+            msBoxSizes.classList.toggle('hidden', isBase);
+        });
+
+        function addSizeInput(name = '', price = '') {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 ms-size-row';
+            div.innerHTML = `
+                <input type="text" class="w-full border rounded-lg px-3 py-2 ms-size-name" placeholder="Nome (Ex: 500ml)" value="${escapeAttr(name)}">
+                <input type="number" step="0.01" class="w-48 border rounded-lg px-3 py-2 ms-size-price" placeholder="Preço" value="${escapeAttr(price)}">
+                <button type="button" class="px-3 py-1 text-red-600 hover:bg-red-100 rounded-lg">X</button>
+            `;
+            div.querySelector('button').addEventListener('click', () => div.remove());
+            msSizesContainer.appendChild(div);
+        }
+
+        msBtnAddSize.addEventListener('click', event => {
+            event.preventDefault();
+            addSizeInput();
+        });
+
+        function addAddonInput(name = '', price = '') {
+            const div = document.createElement('div');
+            div.className = 'flex items-center gap-2 ms-addon-row';
+            div.innerHTML = `
+                <input type="text" class="w-full border rounded-lg px-3 py-2 ms-addon-name" placeholder="Nome (Ex: Bacon)" value="${escapeAttr(name)}">
+                <input type="number" step="0.01" class="w-48 border rounded-lg px-3 py-2 ms-addon-price" placeholder="Preço" value="${escapeAttr(price)}">
+                <button type="button" class="px-3 py-1 text-red-600 hover:bg-red-100 rounded-lg">X</button>
+            `;
+            div.querySelector('button').addEventListener('click', () => div.remove());
+            msAddonsContainer.appendChild(div);
+        }
+
+        msBtnAddAddon.addEventListener('click', event => {
+            event.preventDefault();
+            addAddonInput();
+        });
+
+        function clearMonteSeuForm() {
+            editingMonteSeuId = null;
+            msName.value = '';
+            msType.value = 'base';
+            msBasePrice.value = '';
+            msSizesContainer.innerHTML = '';
+            msAddonsContainer.innerHTML = '';
+            btnSaveMonteSeu.textContent = 'Adicionar';
+            msType.dispatchEvent(new Event('change'));
+        }
+
+        async function saveMonteSeu(event) {
+            event.preventDefault();
+            const name = msName.value.trim();
+            if (!name) {
+                alert('Informe o nome da categoria.');
+                return;
+            }
+            const type = msType.value;
+
+            const data = { name, type, addons: [] };
+            if (type === 'base') {
+                const basePrice = Number(msBasePrice.value || 0);
+                if (basePrice <= 0) {
+                    alert('Informe o preço base.');
+                    return;
+                }
+                data.basePrice = basePrice;
+                data.sizes = undefined;
+            } else {
+                const sizes = [];
+                msSizesContainer.querySelectorAll('.ms-size-row').forEach(row => {
+                    const sizeName = row.querySelector('.ms-size-name').value.trim();
+                    const sizePrice = Number(row.querySelector('.ms-size-price').value || 0);
+                    if (sizeName && sizePrice > 0) {
+                        sizes.push({ name: sizeName, price: sizePrice });
+                    }
+                });
+                if (!sizes.length) {
+                    alert('Adicione ao menos um tamanho.');
+                    return;
+                }
+                data.sizes = sizes;
+                data.basePrice = undefined;
+            }
+
+            const addons = [];
+            msAddonsContainer.querySelectorAll('.ms-addon-row').forEach(row => {
+                const addonName = row.querySelector('.ms-addon-name').value.trim();
+                const addonPrice = Number(row.querySelector('.ms-addon-price').value || 0);
+                if (addonName) {
+                    addons.push({ name: addonName, price: addonPrice > 0 ? addonPrice : 0 });
+                }
+            });
+            data.addons = addons;
+
+            try {
+                if (editingMonteSeuId) {
+                    const index = DB.monteSeu.findIndex(item => item.id === editingMonteSeuId);
+                    if (index > -1) {
+                        DB.monteSeu[index] = { ...DB.monteSeu[index], ...data };
+                    }
+                } else {
+                    data.id = generateId('ms');
+                    DB.monteSeu.push(data);
+                }
+
+                await persistDB();
+                renderMonteSeu();
+                clearMonteSeuForm();
+            } catch (error) {
+                // manejado em persistDB
+            }
+        }
+
+        btnSaveMonteSeu.addEventListener('click', saveMonteSeu);
+
+        function editMonteSeu(id) {
+            const item = DB.monteSeu.find(ms => ms.id === id);
+            if (!item) return;
+            clearMonteSeuForm();
+            editingMonteSeuId = id;
+            msName.value = item.name;
+            msType.value = item.type;
+            msBasePrice.value = item.basePrice ?? '';
+            (item.sizes || []).forEach(size => addSizeInput(size.name, size.price));
+            (item.addons || []).forEach(addon => addAddonInput(addon.name, addon.price));
+            btnSaveMonteSeu.textContent = 'Salvar alterações';
+            msType.dispatchEvent(new Event('change'));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteMonteSeu(id) {
+            if (!confirm('Excluir esta categoria Monte o Seu?')) return;
+            DB.monteSeu = DB.monteSeu.filter(item => item.id !== id);
+            if (editingMonteSeuId === id) {
+                clearMonteSeuForm();
+            }
+            try {
+                await persistDB();
+                renderMonteSeu();
+            } catch (error) {
+                // erro já exibido
+            }
+        }
+
+        function renderMonteSeu() {
+            gridMonteSeu.innerHTML = '';
+            DB.monteSeu.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-t';
+                tr.innerHTML = `
+                    <td class="p-3">${item.name}</td>
+                    <td class="p-3">${item.type === 'base' ? 'Preço base' : 'Tamanhos'}</td>
+                    <td class="p-3 text-right space-x-2">
+                        <button class="px-3 py-1 rounded-lg border hover:bg-neutral-100" data-edit-ms="${item.id}">Editar</button>
+                        <button class="px-3 py-1 rounded-lg border hover:bg-red-100 text-red-600" data-del-ms="${item.id}">Excluir</button>
+                    </td>
+                `;
+                gridMonteSeu.appendChild(tr);
+            });
+
+            gridMonteSeu.querySelectorAll('[data-edit-ms]').forEach(btn => {
+                btn.addEventListener('click', () => editMonteSeu(btn.getAttribute('data-edit-ms')));
+            });
+            gridMonteSeu.querySelectorAll('[data-del-ms]').forEach(btn => {
+                btn.addEventListener('click', () => deleteMonteSeu(btn.getAttribute('data-del-ms')));
+            });
+        }
+
+        function addOptionGroupInput(name = '', price = '') {
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-2 og-option-row';
+            row.innerHTML = `
+                <input type="text" class="w-full border rounded-lg px-3 py-2 og-option-name" placeholder="Nome (Ex: Cheddar)" value="${escapeAttr(name)}">
+                <input type="number" step="0.01" class="w-40 border rounded-lg px-3 py-2 og-option-price" placeholder="Preço" value="${escapeAttr(price)}">
+                <button type="button" class="px-3 py-1 text-red-600 hover:bg-red-100 rounded-lg">X</button>
+            `;
+            row.querySelector('button').addEventListener('click', () => row.remove());
+            ogOptionsContainer.appendChild(row);
+        }
+
+        ogBtnAddOption.addEventListener('click', event => {
+            event.preventDefault();
+            addOptionGroupInput();
+        });
+
+        function clearOptionGroupForm() {
+            editingOptionGroupId = null;
+            ogName.value = '';
+            ogLabel.value = '';
+            ogOptionsContainer.innerHTML = '';
+            btnSaveOptionGroup.textContent = 'Adicionar';
+            addOptionGroupInput();
+        }
+
+        function serializeOptionGroupForm() {
+            const name = ogName.value.trim();
+            if (!name) {
+                alert('Informe o nome do grupo.');
+                return null;
+            }
+            const label = ogLabel.value.trim();
+            const options = [];
+            ogOptionsContainer.querySelectorAll('.og-option-row').forEach(row => {
+                const optionName = row.querySelector('.og-option-name').value.trim();
+                const optionPrice = Number(row.querySelector('.og-option-price').value || 0);
+                if (optionName) {
+                    options.push({ name: optionName, price: optionPrice });
+                }
+            });
+            if (!options.length) {
+                alert('Adicione ao menos uma opção.');
+                return null;
+            }
+            return { name, label, options };
+        }
+
+        btnSaveOptionGroup.addEventListener('click', async event => {
+            event.preventDefault();
+            const data = serializeOptionGroupForm();
+            if (!data) return;
+
+            try {
+                if (editingOptionGroupId) {
+                    const index = DB.optionGroups.findIndex(group => group.id === editingOptionGroupId);
+                    if (index > -1) {
+                        DB.optionGroups[index] = { ...DB.optionGroups[index], ...data };
+                    }
+                } else {
+                    DB.optionGroups.push({ id: generateId('opt'), ...data });
+                }
+
+                await persistDB();
+                renderOptionGroups();
+                populateOptionGroupSelects();
+                renderCategories();
+                renderProducts();
+                clearOptionGroupForm();
+            } catch (error) {
+                // persitência já tratou
+            }
+        });
+
+        btnSaveInfo.addEventListener('click', async event => {
+            event.preventDefault();
+            DB.info = {
+                description: infoDescription.value.trim(),
+                address: infoAddress.value.trim(),
+                whatsapp: infoWhatsapp.value.trim(),
+                instagram: infoInstagram.value.trim(),
+                open: infoOpen.checked
+            };
+            try {
+                await persistDB();
+                alert('Informações atualizadas com sucesso!');
+            } catch (error) {
+                // persistDB já alerta
+            }
+        });
+
+        function editOptionGroup(id) {
+            const group = DB.optionGroups.find(g => g.id === id);
+            if (!group) return;
+            editingOptionGroupId = id;
+            ogName.value = group.name;
+            ogLabel.value = group.label || '';
+            ogOptionsContainer.innerHTML = '';
+            (group.options || []).forEach(opt => addOptionGroupInput(opt.name, opt.price));
+            if (!ogOptionsContainer.children.length) addOptionGroupInput();
+            btnSaveOptionGroup.textContent = 'Salvar alterações';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function deleteOptionGroup(id) {
+            if (!confirm('Excluir este grupo de opcionais?')) return;
+            DB.optionGroups = DB.optionGroups.filter(group => group.id !== id);
+            DB.categories.forEach(cat => {
+                if (cat.optionGroupId === id) cat.optionGroupId = null;
+            });
+            DB.products.forEach(prod => {
+                if (prod.optionGroupId === id) prod.optionGroupId = null;
+            });
+            if (editingOptionGroupId === id) {
+                clearOptionGroupForm();
+            }
+            try {
+                await persistDB();
+                renderOptionGroups();
+                populateOptionGroupSelects();
+                renderCategories();
+                renderProducts();
+            } catch (error) {
+                // erro exibido em persistDB
+            }
+        }
+
+        function renderOptionGroups() {
+            gridOptionGroups.innerHTML = '';
+            if (!DB.optionGroups.length) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="p-3 text-center text-neutral-500" colspan="4">Nenhum grupo cadastrado.</td>`;
+                gridOptionGroups.appendChild(tr);
+                return;
+            }
+            DB.optionGroups.forEach(group => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-t';
+                const resumo = (group.options || []).map(opt => `${escapeAttr(opt.name)} (${money(Number(opt.price || 0))})`).join(', ');
+                tr.innerHTML = `
+                    <td class="p-3">${escapeAttr(group.name)}</td>
+                    <td class="p-3">${group.label ? escapeAttr(group.label) : '-'}</td>
+                    <td class="p-3">${resumo || '-'}</td>
+                    <td class="p-3 text-right space-x-2">
+                        <button class="px-3 py-1 rounded-lg border hover:bg-neutral-100" data-edit-opt="${group.id}">Editar</button>
+                        <button class="px-3 py-1 rounded-lg border hover:bg-red-100 text-red-600" data-del-opt="${group.id}">Excluir</button>
+                    </td>
+                `;
+                gridOptionGroups.appendChild(tr);
+            });
+
+            gridOptionGroups.querySelectorAll('[data-edit-opt]').forEach(btn => {
+                btn.addEventListener('click', () => editOptionGroup(btn.getAttribute('data-edit-opt')));
+            });
+            gridOptionGroups.querySelectorAll('[data-del-opt]').forEach(btn => {
+                btn.addEventListener('click', () => deleteOptionGroup(btn.getAttribute('data-del-opt')));
+            });
+        }
+
+
+        function populateOptionGroupSelects() {
+            const optionsHtml = ['<option value="">Nenhum</option>'];
+            DB.optionGroups.forEach(group => {
+                optionsHtml.push(`<option value="${escapeAttr(group.id)}">${escapeAttr(group.name)}</option>`);
+            });
+            [pOptionGroup, cOptionGroup].forEach(select => {
+                if (!select) return;
+                const current = select.value;
+                select.innerHTML = optionsHtml.join('');
+                const availableValues = Array.from(select.options).map(opt => opt.value);
+                if (availableValues.includes(current)) {
+                    select.value = current;
+                }
+            });
+        }
+
+        function renderAll({ resetForms = false } = {}) {
+            populateOptionGroupSelects();
+            populateCategorySelect();
+            renderCategories();
+            renderProducts();
+            renderBaseFee();
+            renderSitios();
+            renderMonteSeu();
+            renderOptionGroups();
+            if (DB.info) {
+                infoDescription.value = DB.info.description || '';
+                infoAddress.value = DB.info.address || '';
+                infoWhatsapp.value = DB.info.whatsapp || '';
+                infoInstagram.value = DB.info.instagram || '';
+                infoOpen.checked = !!DB.info.open;
+            }
+            if (resetForms) {
+                clearProductForm();
+                clearCategoryForm();
+                clearSitioForm();
+                clearMonteSeuForm();
+                clearOptionGroupForm();
+            }
+            handleCategorySizeToggle();
+            if (!hasInitializedUI) {
+                switchTab('produtos');
+                hasInitializedUI = true;
+            }
+        }
+
+        async function bootstrapData(resetForms = false) {
+            try {
+                if (unsubscribeSnapshot) {
+                    unsubscribeSnapshot();
+                    unsubscribeSnapshot = null;
+                }
+                const data = await loadDB();
+                DB = normalizeDB(data);
+                renderAll({ resetForms });
+                unsubscribeSnapshot = onSnapshot(DATA_DOC, snapshot => {
+                    if (snapshot.exists()) {
+                        DB = normalizeDB(snapshot.data());
+                        renderAll();
+                    }
+                });
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('Não foi possível carregar os dados. Recarregue a página.');
+            }
+        }
+
+        // Init
+        const authSubmitDefaultText = authSubmit.textContent;
+
+        function getAuthErrorMessage(code) {
+            switch (code) {
+                case 'auth/invalid-email':
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                    return 'Credenciais inválidas. Verifique email e senha.';
+                case 'auth/too-many-requests':
+                    return 'Muitas tentativas. Aguarde alguns instantes e tente novamente.';
+                default:
+                    return 'Não foi possível realizar a autenticação. Tente novamente.';
+            }
+        }
+
+        authForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            authError.classList.add('hidden');
+            authSubmit.disabled = true;
+            authSubmit.textContent = 'Entrando...';
+            try {
+                await signInWithEmailAndPassword(auth, authEmail.value.trim(), authPassword.value);
+            } catch (error) {
+                console.error('Erro de autenticação:', error);
+                authError.textContent = getAuthErrorMessage(error.code);
+                authError.classList.remove('hidden');
+            } finally {
+                authSubmit.disabled = false;
+                authSubmit.textContent = authSubmitDefaultText;
+                authPassword.value = '';
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            logoutBtn.disabled = true;
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('Erro ao sair:', error);
+                alert('Não foi possível encerrar a sessão.');
+            } finally {
+                logoutBtn.disabled = false;
+            }
+        });
+
+        onAuthStateChanged(auth, async user => {
+            if (user) {
+                authScreen.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                authError.classList.add('hidden');
+                authForm.reset();
+                await bootstrapData(true);
+            } else {
+                if (unsubscribeSnapshot) {
+                    unsubscribeSnapshot();
+                    unsubscribeSnapshot = null;
+                }
+                DB = cloneDefault();
+                hasInitializedUI = false;
+                renderAll({ resetForms: true });
+                authScreen.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                authError.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+
+</html>
