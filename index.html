@@ -396,10 +396,44 @@
                     { id: 'bebidas', name: 'Bebidas', useSizes: false }
                 ],
                 products: [
-                    { id: 'pz-calabresa', name: 'Calabresa', categoryId: 'pizzas', imageUrl: 'https://images.unsplash.com/photo-1548365328-8b30be9d3ef5?auto=format&fit=crop&w=800&q=60', prices: { p: 32.9, m: 38.9, g: 44.9 }, offerPrices: { g: 41.9 }, available: true },
-                    { id: 'hb-classico', name: 'Hambúrguer Clássico', categoryId: 'hamburgueres', imageUrl: 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&w=800&q=60', price: 18.9, offerPrice: 16.9, available: true },
-                    { id: 'hb-bacon', name: 'Hambúrguer Bacon', categoryId: 'hamburgueres', imageUrl: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=800&q=60', price: 22.9, available: true },
-                    { id: 'beb-guarana', name: 'Guaraná 1L', categoryId: 'bebidas', imageUrl: 'https://images.unsplash.com/photo-1546171753-97d78e0fbb12?auto=format&fit=crop&w=800&q=60', price: 7.5, available: true }
+                    {
+                        id: 'pz-calabresa',
+                        name: 'Calabresa',
+                        description: 'Molho artesanal, mussarela, calabresa fatiada, cebola roxa e orégano.',
+                        categoryId: 'pizzas',
+                        imageUrl: 'https://images.unsplash.com/photo-1548365328-8b30be9d3ef5?auto=format&fit=crop&w=800&q=60',
+                        prices: { p: 32.9, m: 38.9, g: 44.9 },
+                        offerPrices: { g: 41.9 },
+                        available: true
+                    },
+                    {
+                        id: 'hb-classico',
+                        name: 'Hambúrguer Clássico',
+                        description: 'Pão australiano, blend bovino 150g, queijo prato, alface, tomate e molho da casa.',
+                        categoryId: 'hamburgueres',
+                        imageUrl: 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?auto=format&fit=crop&w=800&q=60',
+                        price: 18.9,
+                        offerPrice: 16.9,
+                        available: true
+                    },
+                    {
+                        id: 'hb-bacon',
+                        name: 'Hambúrguer Bacon',
+                        description: 'Blend bovino 160g, queijo cheddar duplo, bacon crocante e molho especial.',
+                        categoryId: 'hamburgueres',
+                        imageUrl: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=800&q=60',
+                        price: 22.9,
+                        available: true
+                    },
+                    {
+                        id: 'beb-guarana',
+                        name: 'Guaraná 1L',
+                        description: 'Bebida gelada pronta para acompanhar o pedido.',
+                        categoryId: 'bebidas',
+                        imageUrl: 'https://images.unsplash.com/photo-1546171753-97d78e0fbb12?auto=format&fit=crop&w=800&q=60',
+                        price: 7.5,
+                        available: true
+                    }
                 ],
                 fees: {
                     base: 5,
@@ -445,7 +479,14 @@
         function normalizeDB(raw = {}) {
             const data = {
                 categories: Array.isArray(raw.categories) ? raw.categories : [],
-                products: Array.isArray(raw.products) ? raw.products : [],
+                products: Array.isArray(raw.products) ? raw.products.map(item => {
+                    if (!item || typeof item !== 'object') {
+                        return { description: '' };
+                    }
+                    const product = { ...item };
+                    product.description = typeof item.description === 'string' ? item.description : '';
+                    return product;
+                }) : [],
                 fees: {
                     base: raw.fees && typeof raw.fees.base === 'number' ? raw.fees.base : 0,
                     sitios: raw.fees && Array.isArray(raw.fees.sitios) ? raw.fees.sitios : []
@@ -685,6 +726,14 @@
                     nameEl.className = 'font-semibold';
                     nameEl.textContent = product.name;
                     body.appendChild(nameEl);
+
+                    const descriptionText = (product.description || '').trim();
+                    if (descriptionText) {
+                        const descriptionEl = document.createElement('p');
+                        descriptionEl.className = 'text-xs text-neutral-400 mt-1';
+                        descriptionEl.textContent = descriptionText;
+                        body.appendChild(descriptionEl);
+                    }
 
                     const priceSpan = document.createElement('span');
                     priceSpan.className = 'text-sm text-neutral-400 mt-1';

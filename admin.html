@@ -84,6 +84,11 @@
                     <label class="block text-sm">Nome do Produto</label>
                     <input id="pName" class="w-full border rounded-lg px-3 py-2" placeholder="Ex.: Calabresa" />
                 </div>
+                <div class="col-span-full">
+                    <label class="block text-sm">Descrição (opcional)</label>
+                    <textarea id="pDescription" rows="3" class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Detalhes, ingredientes ou destaques do produto"></textarea>
+                </div>
                 <div class="col-span-full md:col-span-1">
                     <label class="block text-sm">Categoria</label>
                     <select id="pCategory" class="w-full border rounded-lg px-3 py-2"></select>
@@ -148,6 +153,7 @@
                     <thead class="bg-neutral-100">
                         <tr>
                             <th class="text-left p-3">Produto</th>
+                            <th class="text-left p-3">Descrição</th>
                             <th class="text-left p-3">Categoria</th>
                             <th class="text-left p-3">Imagem</th>
                             <th class="text-left p-3">Preço</th>
@@ -399,7 +405,16 @@
         function normalizeDB(raw = {}) {
             const data = cloneDefault();
             if (Array.isArray(raw.categories)) data.categories = raw.categories;
-            if (Array.isArray(raw.products)) data.products = raw.products;
+            if (Array.isArray(raw.products)) {
+                data.products = raw.products.map(item => {
+                    if (!item || typeof item !== 'object') {
+                        return { description: '' };
+                    }
+                    const product = { ...item };
+                    product.description = typeof item.description === 'string' ? item.description : '';
+                    return product;
+                });
+            }
             if (raw.fees && typeof raw.fees === 'object') {
                 data.fees.base = Number(raw.fees.base || 0);
                 data.fees.sitios = Array.isArray(raw.fees.sitios) ? raw.fees.sitios : [];
@@ -519,6 +534,7 @@
 
         // Produtos
         const pName = document.getElementById('pName');
+        const pDescription = document.getElementById('pDescription');
         const pCategory = document.getElementById('pCategory');
         const pOptionGroup = document.getElementById('pOptionGroup');
         const pImage = document.getElementById('pImage');
@@ -574,6 +590,7 @@
         function clearProductForm() {
             editingProductId = null;
             pName.value = '';
+            pDescription.value = '';
             pCategory.value = '';
             if (pOptionGroup) pOptionGroup.value = '';
             pImage.value = '';
@@ -636,6 +653,7 @@
             const payload = {
                 id: editingProductId || generateId('prod'),
                 name,
+                description: pDescription.value.trim(),
                 categoryId,
                 imageUrl: pImage.value.trim(),
                 available: pAvailable.checked,
@@ -700,6 +718,7 @@
 
             editingProductId = id;
             pName.value = product.name;
+            pDescription.value = product.description || '';
             pCategory.value = product.categoryId;
             pImage.value = product.imageUrl || '';
             pAvailable.checked = product.available !== false;
@@ -756,10 +775,12 @@
             gridProducts.innerHTML = '';
             DB.products.forEach(product => {
                 const category = DB.categories.find(cat => cat.id === product.categoryId);
+                const description = (product.description || '').trim();
                 const tr = document.createElement('tr');
                 tr.className = 'border-t';
                 tr.innerHTML = `
                     <td class="p-3">${product.name}</td>
+                    <td class="p-3 text-neutral-500 text-xs">${description || '-'}</td>
                     <td class="p-3">${category ? category.name : '-'}</td>
                     <td class="p-3">${product.imageUrl ? `<a href="${escapeAttr(product.imageUrl)}" class="text-brand-600 underline" target="_blank">Abrir</a>` : '-'}</td>
                     <td class="p-3">${formatProductPrice(product, category)}</td>
