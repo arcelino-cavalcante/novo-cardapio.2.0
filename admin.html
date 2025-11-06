@@ -148,6 +148,14 @@
                 </div>
             </div>
 
+            <div class="p-4 border-b flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div class="flex flex-wrap gap-2" id="productFilterButtons"></div>
+                <div class="w-full md:w-64">
+                    <label class="block text-sm mb-1" for="productSearch">Buscar produtos</label>
+                    <input id="productSearch" class="w-full border rounded-lg px-3 py-2" placeholder="Digite o nome ou descrição" />
+                </div>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="bg-neutral-100">
@@ -483,6 +491,8 @@
         let editingSitioId = null;
         let editingMonteSeuId = null;
         let editingOptionGroupId = null;
+        let productFilterCategory = '';
+        let productSearchTerm = '';
         let unsubscribeSnapshot = null;
         let hasInitializedUI = false;
 
@@ -553,6 +563,8 @@
         const boxPricesSimpleOffer = document.getElementById('boxPricesSimpleOffer');
         const boxPricesSizes = document.getElementById('boxPricesSizes');
         const boxPricesSizesOffer = document.getElementById('boxPricesSizesOffer');
+        const productFilterButtons = document.getElementById('productFilterButtons');
+        const productSearch = document.getElementById('productSearch');
 
         function populateCategorySelect() {
             const current = pCategory.value;
@@ -586,6 +598,13 @@
         }
 
         pCategory.addEventListener('change', handleCategoryChange);
+
+        if (productSearch) {
+            productSearch.addEventListener('input', event => {
+                productSearchTerm = event.target.value;
+                renderProducts();
+            });
+        }
 
         function clearProductForm() {
             editingProductId = null;
@@ -630,6 +649,38 @@
                 return `<span class="text-red-600">${money(offerPriceValue)}</span> <del class="text-neutral-500">${money(normalPrice)}</del>`;
             }
             return normalPrice > 0 ? money(normalPrice) : '-';
+        }
+
+        function renderProductFilters() {
+            if (!productFilterButtons) return;
+            const categories = Array.isArray(DB.categories) ? DB.categories : [];
+            const validIds = new Set(categories.map(cat => cat.id));
+            if (productFilterCategory && !validIds.has(productFilterCategory)) {
+                productFilterCategory = '';
+            }
+
+            productFilterButtons.innerHTML = '';
+
+            const createButton = (label, value) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                const isActive = productFilterCategory === value;
+                const baseClass = 'px-3 py-1 rounded-lg text-sm transition-colors border';
+                button.className = `${baseClass} ${isActive ? 'bg-brand-600 border-brand-600 text-white shadow-sm' : 'bg-white border-neutral-300 text-neutral-700 hover:bg-neutral-100'}`;
+                button.textContent = label;
+                button.addEventListener('click', () => {
+                    if (productFilterCategory === value) return;
+                    productFilterCategory = value;
+                    renderProductFilters();
+                    renderProducts();
+                });
+                return button;
+            };
+
+            productFilterButtons.appendChild(createButton('Todos', ''));
+            categories.forEach(cat => {
+                productFilterButtons.appendChild(createButton(cat.name, cat.id));
+            });
         }
 
         async function saveProduct(event) {
@@ -772,8 +823,30 @@
         }
 
         function renderProducts() {
+            if (!gridProducts) return;
             gridProducts.innerHTML = '';
-            DB.products.forEach(product => {
+
+            const normalizedSearch = productSearchTerm.trim().toLowerCase();
+            const filteredProducts = (Array.isArray(DB.products) ? DB.products : []).filter(product => {
+                if (productFilterCategory && product.categoryId !== productFilterCategory) {
+                    return false;
+                }
+                if (normalizedSearch) {
+                    const name = (product.name || '').toLowerCase();
+                    const description = (product.description || '').toLowerCase();
+                    return name.includes(normalizedSearch) || description.includes(normalizedSearch);
+                }
+                return true;
+            });
+
+            if (!filteredProducts.length) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `<td class="p-4 text-center text-neutral-500" colspan="7">Nenhum produto encontrado.</td>`;
+                gridProducts.appendChild(emptyRow);
+                return;
+            }
+
+            filteredProducts.forEach(product => {
                 const category = DB.categories.find(cat => cat.id === product.categoryId);
                 const description = (product.description || '').trim();
                 const tr = document.createElement('tr');
@@ -860,6 +933,7 @@
                 renderCategories();
                 populateOptionGroupSelects();
                 populateCategorySelect();
+                renderProductFilters();
                 renderProducts();
                 clearCategoryForm();
             } catch (error) {
@@ -904,6 +978,7 @@
                 renderCategories();
                 populateOptionGroupSelects();
                 populateCategorySelect();
+                renderProductFilters();
                 renderProducts();
             } catch (error) {
                 // erro já informado
@@ -1311,6 +1386,7 @@
                 renderOptionGroups();
                 populateOptionGroupSelects();
                 renderCategories();
+                renderProductFilters();
                 renderProducts();
                 clearOptionGroupForm();
             } catch (error) {
@@ -1365,6 +1441,7 @@
                 renderOptionGroups();
                 populateOptionGroupSelects();
                 renderCategories();
+                renderProductFilters();
                 renderProducts();
             } catch (error) {
                 // erro exibido em persistDB
@@ -1421,9 +1498,18 @@
         }
 
         function renderAll({ resetForms = false } = {}) {
+            if (resetForms) {
+                productFilterCategory = '';
+                productSearchTerm = '';
+            }
+            if (productSearch) {
+                productSearch.value = productSearchTerm;
+            }
+
             populateOptionGroupSelects();
             populateCategorySelect();
             renderCategories();
+            renderProductFilters();
             renderProducts();
             renderBaseFee();
             renderSitios();
